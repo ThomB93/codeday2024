@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CodeDay2024JavaScript</title>
+  <script src="lib/microsoft/signalr/dist/browser/signalr.js"></script>
+  <script defer src="js/game.js"></script>
+  <script defer src="js/signal-r-client.js"></script>
+  <link href="css/styles.css" rel="stylesheet"></head>
+  <body>
+    <div class="game-container">
+      <canvas id="canvas"></canvas>
+      <div>
+        <div>
+          <label for="userInput">User</label>
+          <input type="text" id="userInput" />
+        </div>
+        <div>
+          <label for="messageInput">Message</label>
+          <input type="text" id="messageInput" />
+        </div>
+        <div>
+          <input disabled type="button" id="sendButton" value="Send Message" />
+        </div>
+        <hr />
+        <div>
+          <ul id="messagesList"></ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+﻿#canvas {
+    border: 1px solid grey;
+}
+
+.game-container {
+    display: flex;
+    justify-content: space-evenly;
+}

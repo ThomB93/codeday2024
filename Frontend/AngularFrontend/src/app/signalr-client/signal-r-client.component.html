@@ -1,0 +1,32 @@
+<div>
+  <div>
+    <span>User</span>
+    <input [(ngModel)]="userName" type="text" id="userInput" />
+  </div>
+  <div>
+    <span>Message</span>
+    <input
+      [(ngModel)]="inputText"
+      type="text"
+      class="w-100"
+      id="messageInput"
+    />
+  </div>
+  <div>
+    <input
+      [disabled]="!(isConnectionEstablished | async)"
+      (click)="sendMessage()"
+      type="button"
+      id="sendButton"
+      value="Send Message"
+    />
+  </div>
+  <hr />
+  <div>
+    <ul id="messagesList">
+      @for (message of messages; track message) {
+        <li>{{ message }}</li>
+      }
+    </ul>
+  </div>
+</div>
