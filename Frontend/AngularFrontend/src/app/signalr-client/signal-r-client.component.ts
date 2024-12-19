@@ -1,41 +1,42 @@
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Injectable } from '@angular/core';
+//import { FormsModule } from '@angular/forms';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { BehaviorSubject, filter, switchMap, take, tap } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
+//import { AsyncPipe } from '@angular/common';
+import { DrawData } from '../models/draw-data-mode';
+//import { RandomWordService } from '../random-word-service'; // Import the random word service
 
-@Component({
-  selector: 'app-signalr-client',
-  standalone: true,
-  imports: [FormsModule, AsyncPipe],
-  templateUrl: './signal-r-client.component.html',
-  styleUrl: './signal-r-client.component.scss',
+@Injectable({
+  providedIn: 'root',
 })
-export class SignalRClientComponent {
+export class SignalRService {
   private connection!: HubConnection;
-
+  private playerListSubject: BehaviorSubject<string[]> = new BehaviorSubject<
+    string[]
+  >([]);
+  userId!: string;
   userName!: string;
   inputText!: string;
   isConnectionEstablished = new BehaviorSubject<boolean>(false);
   messages: string[] = [];
 
+  randomWord: string | null = null;
+
   constructor() {
     // Just generate a random user ID for this example. Possibly add real authentication if you have the time.
-    const userId = this.generateUserId();
+    this.userId = this.generateUserId();
 
     // Absolute URL is necessary when serving with ng serve/npm run start.
-    // Relative URL ("/sample") is okay when building with ng build/npm run build and serving
-    // the static files from within the ASP.NET Core app.
     this.connection = new HubConnectionBuilder()
-      .withUrl('https://localhost:7054/sample', {
-        accessTokenFactory: () => userId,
+      .withUrl('https://localhost:7054/draw', {
+        accessTokenFactory: () => this.userId,
       })
       .withAutomaticReconnect()
       .build();
 
-    this.registerMethodListeners();
     this.startConnection();
     this.callHelloWorld();
+    this.joinLobby();
   }
 
   private generateUserId(): string {
@@ -56,11 +57,27 @@ export class SignalRClientComponent {
       .subscribe();
   }
 
-  sendMessage() {
-    const message = { user: this.userName, text: this.inputText };
+  private joinLobby() {
+    const methodName = 'JoinLobby';
+    this.isConnectionEstablished
+      .pipe(
+        filter((connected) => connected),
+        switchMap(() => this.connection.invoke(methodName)),
+      )
+      .subscribe();
 
-    this.connection.invoke('SendMessage', message).catch((err) => {
-      return console.error(err.toString());
+    this.connection.on('ReceivePlayerList', (players: string[]) => {
+      console.log('Received player list:', players);
+      this.playerListSubject.next(players);
+    });
+
+    this.connection.on('LobbyFullAlert', (message: string) => {
+      alert(message);
+    });
+
+    this.connection.on('ReceiveRandomWord', (word: string) => {
+      console.log('Random Word Received:', word);
+      this.randomWord = word;
     });
   }
 
@@ -70,13 +87,26 @@ export class SignalRClientComponent {
     });
   }
 
-  private registerMethodListeners() {
-    this.receiveMessages();
+  public sendDrawData(data: DrawData) {
+    this.connection
+      .invoke('SendDrawData', data)
+      .catch((err) => console.error('Error sending draw data: ', err));
   }
 
-  private receiveMessages() {
-    this.connection.on('ReceiveMessage', (response) => {
-      this.messages.push(`${response.user} says ${response.text}`);
-    });
+  public onDraw(callback: (data: DrawData) => void) {
+    this.connection.on('ReceiveDrawData', callback);
+  }
+
+  // Expose the player list as an observable
+  getPlayerListObservable() {
+    return this.playerListSubject.asObservable();
+  }
+
+  getRandomWord(): string | null {
+    return this.randomWord;
+  }
+
+  onRandomWord(callback: (word: string) => void): void {
+    this.connection?.on('ReceiveRandomWord', callback);
   }
 }

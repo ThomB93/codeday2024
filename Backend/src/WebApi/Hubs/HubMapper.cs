@@ -4,7 +4,6 @@ public static class HubMapper
 {
     public static void MapHubs(this IEndpointRouteBuilder app)
     {
-        app.MapHub<SampleSignalRHub>("/sample");
-        // app.MapHub<OtherSignalRHub>("/otherHub");
+        app.MapHub<DrawSignalRHub>("/draw");
     }
 }
